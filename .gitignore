@@ -1,0 +1,23 @@
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Java / Maven
+backend/target/
+*.class
+*.jar
+*.war
+
+# Env / OS
+.env
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Temp uploads
+/tmp/pdfbound-uploads/
+
+# Maven shade output
+backend/dependency-reduced-pom.xml
