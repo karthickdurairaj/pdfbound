@@ -3,12 +3,12 @@ services:
     image: ghcr.io/karthickdurairaj/pdfbound-backend:latest
     restart: unless-stopped
     environment:
-      - PORT=4000
+      - PORT=8080
       - UPLOAD_DIR=/tmp/pdfbound-uploads
     volumes:
       - pdfbound-uploads:/tmp/pdfbound-uploads
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health || exit 1"]
       interval: 15s
       retries: 5
       start_period: 20s
@@ -17,7 +17,8 @@ services:
     image: ghcr.io/karthickdurairaj/pdfbound-frontend:latest
     restart: unless-stopped
     ports:
-      - "80:80"
+      # Host nginx on :80 reverse-proxies to this; bound to localhost only.
+      - "127.0.0.1:8081:80"
     depends_on:
       backend:
         condition: service_healthy
