@@ -8,6 +8,7 @@ import ExtractPages from './pages/ExtractPages.jsx';
 import DeletePages from './pages/DeletePages.jsx';
 import PdfInfo from './pages/PdfInfo.jsx';
 import ImagesToPdf from './pages/ImagesToPdf.jsx';
+import Privacy from './pages/Privacy.jsx';
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/extract" element={<ExtractPages />} />
           <Route path="/delete-pages" element={<DeletePages />} />
           <Route path="/info" element={<PdfInfo />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>
@@ -45,7 +47,7 @@ export default function App() {
         <div className="container">
           PDFBound — free PDF tools in your browser. Files are uploaded to the
           PDFBound server only to process them, and are deleted afterwards.
-          No account, no files kept.
+          No account, no files kept. · <Link to="/privacy">Privacy Policy</Link>
         </div>
       </footer>
     </>
