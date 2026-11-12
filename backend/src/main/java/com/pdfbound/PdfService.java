@@ -307,6 +307,95 @@ public final class PdfService {
                   : ((b[at] & 0xFF) << 24) | ((b[at + 1] & 0xFF) << 16) | ((b[at + 2] & 0xFF) << 8) | (b[at + 3] & 0xFF);
   }
 
+  // --- password protection ---------------------------------------------
+
+  private static final java.security.SecureRandom RANDOM = new java.security.SecureRandom();
+
+  /**
+   * Encrypt with AES-256. The user password is needed to open the file.
+   * The owner password (which controls permissions) is random and never
+   * shown, so the restrictions cannot be lifted without the user password.
+   * Passwords are never logged.
+   */
+  public static byte[] protect(File file, String password, boolean allowPrint, boolean allowCopy, boolean allowEdit)
+      throws IOException {
+    checkPassword(password);
+    PDDocument loaded;
+    try {
+      loaded = Loader.loadPDF(file);
+    } catch (org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException e) {
+      throw new IllegalArgumentException("This PDF is already password-protected. Unlock it first.");
+    } catch (IOException e) {
+      throw new IOException("Could not read this file as a PDF (it may be corrupt).", e);
+    }
+    try (PDDocument doc = loaded) {
+      if (doc.isEncrypted()) {
+        throw new IllegalArgumentException("This PDF is already password-protected. Unlock it first.");
+      }
+      org.apache.pdfbox.pdmodel.encryption.AccessPermission ap =
+        new org.apache.pdfbox.pdmodel.encryption.AccessPermission();
+      ap.setCanPrint(allowPrint);
+      ap.setCanPrintFaithful(allowPrint);
+      ap.setCanExtractContent(allowCopy);
+      ap.setCanExtractForAccessibility(true); // screen readers keep working
+      ap.setCanModify(allowEdit);
+      ap.setCanModifyAnnotations(allowEdit);
+      ap.setCanFillInForm(allowEdit);
+      ap.setCanAssembleDocument(allowEdit);
+
+      byte[] ownerBytes = new byte[24];
+      RANDOM.nextBytes(ownerBytes);
+      String ownerPassword = java.util.HexFormat.of().formatHex(ownerBytes);
+
+      org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy policy =
+        new org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy(ownerPassword, password, ap);
+      policy.setEncryptionKeyLength(256); // AES-256
+      doc.protect(policy);
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        doc.save(out);
+        return out.toByteArray();
+      }
+    }
+  }
+
+  /** Open with the given password and save an unencrypted copy. */
+  public static byte[] unlock(File file, String password) throws IOException {
+    if (password == null || password.isEmpty()) {
+      throw new IllegalArgumentException("Enter the PDF's password.");
+    }
+    PDDocument doc;
+    try {
+      doc = Loader.loadPDF(file, password);
+    } catch (org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException e) {
+      throw new IllegalArgumentException("Wrong password. Please check it and try again.");
+    } catch (IOException e) {
+      throw new IOException("Could not read this file as a PDF (it may be corrupt).", e);
+    }
+    try (doc) {
+      if (!doc.isEncrypted()) {
+        throw new IllegalArgumentException("This PDF is not password-protected.");
+      }
+      doc.setAllSecurityToBeRemoved(true);
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        doc.save(out);
+        return out.toByteArray();
+      }
+    }
+  }
+
+  private static void checkPassword(String password) {
+    if (password == null || password.isEmpty()) {
+      throw new IllegalArgumentException("Enter a password.");
+    }
+    if (password.length() < 4) {
+      throw new IllegalArgumentException("Password must be at least 4 characters.");
+    }
+    // AES-256 PDF passwords are limited to 127 UTF-8 bytes.
+    if (password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 127) {
+      throw new IllegalArgumentException("Password is too long (max 127 bytes).");
+    }
+  }
+
   // --- helpers -----------------------------------------------------------
 
   /** Copy the given 1-based pages into a new PDF and return its bytes. */
@@ -326,7 +415,7 @@ public final class PdfService {
     try {
       return Loader.loadPDF(file);
     } catch (IOException e) {
-      throw new IOException("Could not read this file as a PDF (it may be corrupt or password-protected).", e);
+      throw new IOException("Could not read this file as a PDF (it may be corrupt, or password-protected: use Unlock PDF first).", e);
     }
   }
 

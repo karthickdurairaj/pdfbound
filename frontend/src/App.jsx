@@ -9,6 +9,8 @@ import ExtractPages from './pages/ExtractPages.jsx';
 import DeletePages from './pages/DeletePages.jsx';
 import PdfInfo from './pages/PdfInfo.jsx';
 import ImagesToPdf from './pages/ImagesToPdf.jsx';
+import ProtectPdf from './pages/ProtectPdf.jsx';
+import UnlockPdf from './pages/UnlockPdf.jsx';
 import Privacy from './pages/Privacy.jsx';
 
 export default function App() {
@@ -42,6 +44,7 @@ export default function App() {
             <NavLink to="/images-to-pdf">Image to PDF</NavLink>
             <NavLink to="/split">Split</NavLink>
             <NavLink to="/compress">Compress</NavLink>
+            <NavLink to="/protect">Protect</NavLink>
             <NavLink to="/info">PDF Info</NavLink>
           </nav>
         </div>
@@ -57,6 +60,8 @@ export default function App() {
           <Route path="/rotate" element={<RotatePdf />} />
           <Route path="/extract" element={<ExtractPages />} />
           <Route path="/delete-pages" element={<DeletePages />} />
+          <Route path="/protect" element={<ProtectPdf />} />
+          <Route path="/unlock" element={<UnlockPdf />} />
           <Route path="/info" element={<PdfInfo />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<Home />} />

@@ -58,7 +58,7 @@ img { max-width: 100%; }
 .dropzone input { display: none; }
 .field { margin: 16px 0; }
 .field label { display: block; font-weight: 600; margin-bottom: 6px; }
-.field input[type="text"], .field select { width: 100%; max-width: 420px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.field input[type="text"], .field input[type="password"], .field select { width: 100%; max-width: 420px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
 .field .hint { color: var(--muted); font-size: 0.88rem; margin-top: 4px; }
 .file-list { list-style: none; margin: 16px 0; padding: 0; }
 .file-list li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; background: #fff; }
@@ -147,7 +147,7 @@ img { max-width: 100%; }
   .tool-page .lede { margin-bottom: 16px; }
   .panel { padding: 16px; border-radius: 10px; }
   .dropzone { padding: 28px 12px; }
-  .field input[type="text"], .field select { max-width: none; font-size: 16px; padding: 12px; }
+  .field input[type="text"], .field input[type="password"], .field select { max-width: none; font-size: 16px; padding: 12px; }
   .options-row { flex-direction: column; gap: 0; }
   .options-row .field { min-width: 0; }
 
