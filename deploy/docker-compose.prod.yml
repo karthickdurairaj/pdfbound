@@ -2,11 +2,16 @@ services:
   backend:
     image: ghcr.io/karthickdurairaj/pdfbound-backend:latest
     restart: unless-stopped
+    init: true
     environment:
       - PORT=8080
       - UPLOAD_DIR=/tmp/pdfbound-uploads
+    # Write backend output to ~/pdfbound/logs/backend/backend.log on the VPS,
+    # and still to stdout so `docker logs` keeps working.
+    entrypoint: ["bash", "-c", "set -o pipefail; java -jar app.jar 2>&1 | tee -a /app/logs/backend.log"]
     volumes:
       - pdfbound-uploads:/tmp/pdfbound-uploads
+      - ./logs/backend:/app/logs
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health || exit 1"]
       interval: 15s
@@ -19,6 +24,9 @@ services:
     ports:
       # Host nginx on :80 reverse-proxies to this; bound to localhost only.
       - "127.0.0.1:8081:80"
+    # nginx access.log and error.log land in ~/pdfbound/logs/frontend/ on the VPS.
+    volumes:
+      - ./logs/frontend:/var/log/nginx
     depends_on:
       backend:
         condition: service_healthy
