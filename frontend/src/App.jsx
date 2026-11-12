@@ -1,4 +1,5 @@
-import { Link, Route, Routes } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import MergePdf from './pages/MergePdf.jsx';
 import SplitPdf from './pages/SplitPdf.jsx';
@@ -11,18 +12,37 @@ import ImagesToPdf from './pages/ImagesToPdf.jsx';
 import Privacy from './pages/Privacy.jsx';
 
 export default function App() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  // On navigation: close the phone menu and start the new page at the top.
+  useEffect(() => {
+    setMenuOpen(false);
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <>
       <header className="site-header">
         <div className="container">
           <Link to="/" className="logo">PDF<span>Bound</span></Link>
-          <nav>
-            <Link to="/">All tools</Link>
-            <Link to="/merge">Merge</Link>
-            <Link to="/images-to-pdf">Image to PDF</Link>
-            <Link to="/split">Split</Link>
-            <Link to="/compress">Compress</Link>
-            <Link to="/info">PDF Info</Link>
+          <button
+            type="button"
+            className="menu-toggle"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls="site-nav"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
+          <nav id="site-nav" className={menuOpen ? 'open' : ''}>
+            <NavLink to="/" end>All tools</NavLink>
+            <NavLink to="/merge">Merge</NavLink>
+            <NavLink to="/images-to-pdf">Image to PDF</NavLink>
+            <NavLink to="/split">Split</NavLink>
+            <NavLink to="/compress">Compress</NavLink>
+            <NavLink to="/info">PDF Info</NavLink>
           </nav>
         </div>
       </header>

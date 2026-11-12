@@ -19,6 +19,7 @@ body {
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; }
 input, select { font: inherit; }
+img { max-width: 100%; }
 .container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
 
 /* Header / footer */
@@ -27,7 +28,8 @@ input, select { font: inherit; }
 .logo { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
 .logo span { color: var(--red); }
 .site-header nav { display: flex; gap: 18px; margin-left: auto; font-size: 0.95rem; }
-.site-header nav a:hover { color: var(--red); }
+.site-header nav a:hover, .site-header nav a.active { color: var(--red); }
+.menu-toggle { display: none; }
 .site-footer { border-top: 1px solid var(--line); margin-top: 64px; padding: 24px 0 32px; color: var(--muted); font-size: 0.9rem; }
 
 /* Hero + tool grid */
@@ -101,3 +103,77 @@ input, select { font: inherit; }
 .legal code { background: #f4f4f5; padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
 .legal-back { margin-top: 28px; }
 .site-footer a { color: var(--red); text-decoration: underline; }
+
+/* ---------------------------------------------------------------------------
+   Mobile (phones and small tablets)
+   --------------------------------------------------------------------------- */
+.info-table td { word-break: break-word; }
+
+@media (max-width: 760px) {
+  .container { padding: 0 16px; }
+
+  /* Header: logo + ☰ button; nav drops down as a full-width list. */
+  .site-header .container { height: 56px; gap: 12px; }
+  .menu-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-left: auto; width: 44px; height: 44px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    font-size: 1.3rem; color: var(--ink);
+  }
+  .site-header nav {
+    display: none; position: absolute; top: 56px; left: 0; right: 0;
+    flex-direction: column; gap: 0; margin: 0;
+    background: #fff; border-bottom: 1px solid var(--line);
+    box-shadow: 0 10px 20px rgba(0,0,0,.08);
+  }
+  .site-header nav.open { display: flex; }
+  .site-header nav a { padding: 14px 20px; border-top: 1px solid var(--line); font-size: 1rem; }
+
+  /* Home */
+  .hero { padding: 32px 4px 16px; }
+  .hero h1 { font-size: 1.85rem; line-height: 1.2; }
+  .hero p { font-size: 1rem; }
+  .search { font-size: 16px; }              /* 16px stops iOS zooming in on focus */
+  .tool-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 16px; }
+  .tool-card { padding: 14px; }
+  .tool-card .icon { font-size: 1.5rem; }
+  .tool-card h3 { font-size: 1rem; margin: 8px 0 4px; }
+  .tool-card p { font-size: 0.85rem; }
+  .tool-card:hover { transform: none; }
+
+  /* Tool pages */
+  .tool-page { padding: 20px 0 8px; }
+  .tool-page h1 { font-size: 1.6rem; }
+  .tool-page .lede { margin-bottom: 16px; }
+  .panel { padding: 16px; border-radius: 10px; }
+  .dropzone { padding: 28px 12px; }
+  .field input[type="text"], .field select { max-width: none; font-size: 16px; padding: 12px; }
+  .options-row { flex-direction: column; gap: 0; }
+  .options-row .field { min-width: 0; }
+
+  /* Buttons: full-width primary actions, bigger tap targets. */
+  .btn-row { flex-direction: column; }
+  .btn-row .btn { width: 100%; padding: 14px 22px; }
+  .btn.small { min-width: 36px; min-height: 36px; }
+
+  /* File list: name on its own line, controls below. */
+  .file-list li { flex-wrap: wrap; }
+  .file-list .name { flex-basis: 100%; white-space: normal; word-break: break-word; }
+
+  /* Image to PDF thumbnails: two per row. */
+  .thumb-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  /* PDF Info table: label above value. */
+  .info-table th, .info-table td { display: block; width: auto; padding: 6px 0; }
+  .info-table th { border-bottom: none; padding-top: 12px; }
+
+  /* Legal pages */
+  .legal h2 { font-size: 1.15rem; }
+
+  .site-footer { margin-top: 40px; font-size: 0.85rem; }
+}
+
+@media (max-width: 360px) {
+  .tool-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.6rem; }
+}
