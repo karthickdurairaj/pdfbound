@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { postDownload } from '../api.js';
-import { Dropzone, FileList, Status } from '../components/ToolShell.jsx';
+import { downloadBlob } from '../api.js';
+import { rotatePdf } from '../pdfLocal.js';
+import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
 
 export default function RotatePdf() {
   const [files, setFiles] = useState([]);
@@ -14,11 +15,8 @@ export default function RotatePdf() {
     if (!files.length) { setError('Upload a PDF first.'); return; }
     setLoading(true); setError(''); setSuccess('');
     try {
-      const form = new FormData();
-      form.append('file', files[0]);
-      form.append('pages', pages);
-      form.append('angle', angle);
-      const name = await postDownload('/api/pdf/rotate', form, 'rotated.pdf');
+      const { blob, name } = await rotatePdf(files[0], pages, Number(angle));
+      downloadBlob(blob, name);
       setSuccess(`Downloaded ${name}.`);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -28,6 +26,7 @@ export default function RotatePdf() {
     <div className="tool-page">
       <h1>Rotate PDF</h1>
       <p className="lede">Rotate pages 90°, 180° or 270° — all pages, or just the ones you pick.</p>
+      <LocalBadge />
       <div className="panel">
         <Dropzone onFiles={(picked, err) => { setError(err || ''); setSuccess(''); if (picked.length) setFiles(picked.slice(0, 1)); }} />
         <FileList files={files} onRemove={() => setFiles([])} />

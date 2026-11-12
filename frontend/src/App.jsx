@@ -70,9 +70,9 @@ export default function App() {
 
       <footer className="site-footer">
         <div className="container">
-          PDFBound — free PDF tools in your browser. Files are uploaded to the
-          PDFBound server only to process them, and are deleted afterwards.
-          No account, no files kept. · <Link to="/privacy">Privacy Policy</Link>
+          PDFBound — free PDF tools. Merge, Split, Rotate, Extract and Delete
+          Pages run entirely on your device. Other tools upload your file only to
+          process it, then delete it. No account, no files kept. · <Link to="/privacy">Privacy Policy</Link>
         </div>
       </footer>
     </>

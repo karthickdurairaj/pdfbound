@@ -52,6 +52,8 @@ img { max-width: 100%; }
 .tool-page { padding: 32px 0 8px; }
 .tool-page h1 { margin: 0 0 8px; }
 .tool-page .lede { color: var(--muted); margin: 0 0 24px; }
+.tool-page .lede:has(+ .local-badge) { margin-bottom: 10px; }
+.local-badge { display: inline-block; margin: 0 0 20px; padding: 6px 12px; border-radius: 999px; background: #f0fdf4; border: 1px solid #bbf7d0; color: var(--green); font-size: 0.88rem; font-weight: 600; }
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
 .dropzone { border: 2px dashed var(--line); border-radius: var(--radius); padding: 36px 20px; text-align: center; color: var(--muted); cursor: pointer; background: #fff; }
 .dropzone.dragging { border-color: var(--red); background: #fff5f5; }
