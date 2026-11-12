@@ -38,11 +38,15 @@ public class PdfToolsVerticle extends AbstractVerticle {
 
     Router router = Router.router(vertx);
 
-    // CORS: allow the Vite dev server and any origin in dev.
-    router.route().handler(CorsHandler.create()
-      .addOrigin("http://localhost:3000")
-      .addOrigin("http://127.0.0.1:3000")
-            //.addOrigin("*")
+    // CORS: allowed origins come from CORS_ORIGINS (comma-separated).
+    // Defaults to the Vite dev server; production sets https://pdfbound.com etc.
+    String corsEnv = System.getenv().getOrDefault("CORS_ORIGINS",
+      "http://localhost:3000,http://127.0.0.1:3000");
+    CorsHandler cors = CorsHandler.create();
+    for (String origin : corsEnv.split(",")) {
+      if (!origin.isBlank()) cors.addOrigin(origin.trim());
+    }
+    router.route().handler(cors
       .allowedMethod(HttpMethod.GET)
       .allowedMethod(HttpMethod.POST)
       .allowedMethod(HttpMethod.OPTIONS)

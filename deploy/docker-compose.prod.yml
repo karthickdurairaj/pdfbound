@@ -6,6 +6,7 @@ services:
     environment:
       - PORT=8080
       - UPLOAD_DIR=/tmp/pdfbound-uploads
+      - CORS_ORIGINS=https://pdfbound.com,https://www.pdfbound.com
     # Write backend output to ~/pdfbound/logs/backend/backend.log on the VPS,
     # and still to stdout so `docker logs` keeps working.
     entrypoint: ["bash", "-c", "set -o pipefail; java -jar app.jar 2>&1 | tee -a /app/logs/backend.log"]
