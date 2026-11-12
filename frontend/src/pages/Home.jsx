@@ -13,7 +13,8 @@ const FALLBACK_TOOLS = [
   { id: 'extract', name: 'Extract Pages', description: 'Pull out just the pages you need into a new PDF.', path: '/extract', icon: '📄' },
   { id: 'delete-pages', name: 'Delete Pages', description: 'Remove unwanted pages from a PDF.', path: '/delete-pages', icon: '🗑️' },
   { id: 'info', name: 'PDF Info', description: 'Page count, title, author and metadata of any PDF.', path: '/info', icon: 'ℹ️' },
-  { id: 'protect', name: 'Protect / Unlock', description: 'Password-protect or unlock a PDF.', path: null, icon: '🔒', comingSoon: true },
+  { id: 'protect', name: 'Protect PDF', description: 'Add a password to a PDF, with AES-256 encryption.', path: '/protect', icon: '🔒' },
+  { id: 'unlock', name: 'Unlock PDF', description: 'Remove the password from a PDF you can open.', path: '/unlock', icon: '🔓' },
 ];
 
 export default function Home() {

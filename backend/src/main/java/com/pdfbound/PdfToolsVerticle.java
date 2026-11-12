@@ -140,6 +140,23 @@ public class PdfToolsVerticle extends AbstractVerticle {
       } catch (Exception e) { handleError(ctx, e); }
     });
 
+    router.post("/api/pdf/protect").blockingHandler(ctx -> {
+      try {
+        File file = requireSingleUpload(ctx, "file");
+        byte[] pdf = PdfService.protect(file,
+          ctx.request().getFormAttribute("password"),
+          flag(ctx, "allowPrint"), flag(ctx, "allowCopy"), flag(ctx, "allowEdit"));
+        sendPdf(ctx, pdf, "protected.pdf");
+      } catch (Exception e) { handleError(ctx, e); }
+    });
+
+    router.post("/api/pdf/unlock").blockingHandler(ctx -> {
+      try {
+        File file = requireSingleUpload(ctx, "file");
+        sendPdf(ctx, PdfService.unlock(file, ctx.request().getFormAttribute("password")), "unlocked.pdf");
+      } catch (Exception e) { handleError(ctx, e); }
+    });
+
     // Unknown routes under /api get JSON 404, not an HTML page.
     router.route("/api/*").handler(ctx -> sendError(ctx, 404, "Unknown API route: " + ctx.request().path()));
 
@@ -165,8 +182,16 @@ public class PdfToolsVerticle extends AbstractVerticle {
     tools.add(tool("extract", "Extract Pages", "Extract selected pages into a new PDF.", "POST /api/pdf/extract"));
     tools.add(tool("delete-pages", "Delete Pages", "Remove selected pages from a PDF.", "POST /api/pdf/delete-pages"));
     tools.add(tool("info", "PDF Info", "Page count, title, author and metadata.", "POST /api/pdf/info"));
-    tools.add(tool("protect", "Protect / Unlock", "Password-protect or unlock a PDF (coming soon).", null));
+    tools.add(tool("protect", "Protect PDF", "Add a password to a PDF (AES-256).", "POST /api/pdf/protect"));
+    tools.add(tool("unlock", "Unlock PDF", "Remove the password from a PDF you can open.", "POST /api/pdf/unlock"));
     return tools.encode();
+  }
+
+  /** Checkbox-style form flag: "true" / "on" / "1" means yes; missing means yes (allowed). */
+  private boolean flag(RoutingContext ctx, String name) {
+    String v = ctx.request().getFormAttribute(name);
+    if (v == null || v.isBlank()) return true;
+    return v.equalsIgnoreCase("true") || v.equalsIgnoreCase("on") || v.equals("1");
   }
 
   private JsonObject tool(String id, String name, String description, String endpoint) {

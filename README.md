@@ -84,6 +84,8 @@ Base URL: `http://localhost:8080` (or `/api` through the frontend proxy).
 | POST | `/api/pdf/rotate` | multipart `file`, form `pages` e.g. `1,3-5` or `all`, `angle` 90\|180\|270 | Rotated PDF download |
 | POST | `/api/pdf/extract` | multipart `file`, form `pages` e.g. `1,3-5` | PDF with only those pages |
 | POST | `/api/pdf/delete-pages` | multipart `file`, form `pages` e.g. `2,4-5` | PDF without those pages |
+| POST | `/api/pdf/protect` | multipart `file`, form `password` (≥4 chars), optional `allowPrint`/`allowCopy`/`allowEdit` true\|false (default true) | AES-256 encrypted PDF |
+| POST | `/api/pdf/unlock` | multipart `file`, form `password` | PDF with the password removed |
 
 Errors are JSON: `{"error": "..."}` — 400 bad input, 413 oversize, 500 otherwise.
 
@@ -132,7 +134,8 @@ curl -F "file=@sample.pdf" -F "pages=2" \
 - **Compress is a re-save, not image downsampling.** PDFBox re-saves streams
   compressed; text-heavy PDFs may shrink only a little, and embedded images
   are not recompressed.
-- **Protect / Unlock is not implemented in the MVP** — shown as "Coming soon"
-  on the home page.
+- **Protect PDF uses AES-256** with a random, never-shown owner password.
+  Print/copy/edit limits are honoured by most viewers but not enforced by all;
+  the open password is the real protection. Passwords are never logged.
 - **Limits:** 50 MB per file (client + server validation), 100 MB per request
-  body. Password-protected PDFs are rejected by PDFBox in this MVP.
+  body. Other tools reject password-protected PDFs; use Unlock PDF first.
