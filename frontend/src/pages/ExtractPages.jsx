@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { postDownload } from '../api.js';
-import { Dropzone, FileList, Status } from '../components/ToolShell.jsx';
+import { downloadBlob } from '../api.js';
+import { extractPages } from '../pdfLocal.js';
+import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
 
 export default function ExtractPages() {
   const [files, setFiles] = useState([]);
@@ -14,10 +15,8 @@ export default function ExtractPages() {
     if (!pages.trim()) { setError('Enter the pages to extract, e.g. 1,3-5.'); return; }
     setLoading(true); setError(''); setSuccess('');
     try {
-      const form = new FormData();
-      form.append('file', files[0]);
-      form.append('pages', pages);
-      const name = await postDownload('/api/pdf/extract', form, 'extracted.pdf');
+      const { blob, name } = await extractPages(files[0], pages);
+      downloadBlob(blob, name);
       setSuccess(`Downloaded ${name}.`);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -27,6 +26,7 @@ export default function ExtractPages() {
     <div className="tool-page">
       <h1>Extract Pages</h1>
       <p className="lede">Pull out just the pages you need into a new PDF.</p>
+      <LocalBadge />
       <div className="panel">
         <Dropzone onFiles={(picked, err) => { setError(err || ''); setSuccess(''); if (picked.length) setFiles(picked.slice(0, 1)); }} />
         <FileList files={files} onRemove={() => setFiles([])} />

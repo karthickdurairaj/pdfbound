@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { postDownload } from '../api.js';
-import { Dropzone, FileList, Status } from '../components/ToolShell.jsx';
+import { downloadBlob } from '../api.js';
+import { splitPdf } from '../pdfLocal.js';
+import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
 
 export default function SplitPdf() {
   const [files, setFiles] = useState([]);
@@ -15,11 +16,8 @@ export default function SplitPdf() {
     if (!files.length) { setError('Upload a PDF first.'); return; }
     setLoading(true); setError(''); setSuccess('');
     try {
-      const form = new FormData();
-      form.append('file', files[0]);
-      if (mode === 'ranges') form.append('ranges', ranges);
-      else form.append('every', every);
-      const name = await postDownload('/api/pdf/split', form, 'split.zip');
+      const { blob, name } = await splitPdf(files[0], mode === 'ranges' ? { ranges } : { every });
+      downloadBlob(blob, name);
       setSuccess(`Downloaded ${name} — it contains one PDF per part.`);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -29,6 +27,7 @@ export default function SplitPdf() {
     <div className="tool-page">
       <h1>Split PDF</h1>
       <p className="lede">Split a PDF into page ranges, or one file every N pages. You get a ZIP with one PDF per part.</p>
+      <LocalBadge />
       <div className="panel">
         <Dropzone onFiles={(picked, err) => { setError(err || ''); setSuccess(''); if (picked.length) setFiles(picked.slice(0, 1)); }} />
         <FileList files={files} onRemove={() => setFiles([])} />

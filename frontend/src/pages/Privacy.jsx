@@ -30,7 +30,11 @@ export default function Privacy() {
         <h2>What we collect, and why</h2>
         <h3>1. The files you upload</h3>
         <p>
-          When you use a tool, your files are sent to our server over an encrypted (HTTPS) connection. The server
+          <strong>Merge PDF, Split PDF, Rotate PDF, Extract Pages and Delete Pages run entirely in your browser.</strong>{' '}
+          Your files stay on your device and are never sent to our server.
+        </p>
+        <p>
+          When you use any other tool, your files are sent to our server over an encrypted (HTTPS) connection. The server
           processes them, sends the result straight back to your browser, and then deletes both the uploaded files and
           the result. We do not open, read, review, copy or keep your documents, and we don't use them for any other
           purpose, such as training software or building profiles.

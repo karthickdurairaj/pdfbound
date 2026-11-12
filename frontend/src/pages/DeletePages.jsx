@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { postDownload } from '../api.js';
-import { Dropzone, FileList, Status } from '../components/ToolShell.jsx';
+import { downloadBlob } from '../api.js';
+import { deletePages } from '../pdfLocal.js';
+import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
 
 export default function DeletePages() {
   const [files, setFiles] = useState([]);
@@ -14,10 +15,8 @@ export default function DeletePages() {
     if (!pages.trim()) { setError('Enter the pages to delete, e.g. 2,4-5.'); return; }
     setLoading(true); setError(''); setSuccess('');
     try {
-      const form = new FormData();
-      form.append('file', files[0]);
-      form.append('pages', pages);
-      const name = await postDownload('/api/pdf/delete-pages', form, 'cleaned.pdf');
+      const { blob, name } = await deletePages(files[0], pages);
+      downloadBlob(blob, name);
       setSuccess(`Downloaded ${name}.`);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -27,6 +26,7 @@ export default function DeletePages() {
     <div className="tool-page">
       <h1>Delete Pages</h1>
       <p className="lede">Remove unwanted pages from a PDF.</p>
+      <LocalBadge />
       <div className="panel">
         <Dropzone onFiles={(picked, err) => { setError(err || ''); setSuccess(''); if (picked.length) setFiles(picked.slice(0, 1)); }} />
         <FileList files={files} onRemove={() => setFiles([])} />

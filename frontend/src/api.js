@@ -55,6 +55,12 @@ export async function postDownload(path, formData, fallbackName) {
   const disposition = res.headers.get('Content-Disposition') || '';
   const match = /filename="?([^";]+)"?/.exec(disposition);
   const name = match ? match[1] : fallbackName;
+  downloadBlob(blob, name);
+  return name;
+}
+
+/** Save a Blob to the user's device with the given file name. */
+export function downloadBlob(blob, name) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

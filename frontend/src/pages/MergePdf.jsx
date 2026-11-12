@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { postDownload } from '../api.js';
-import { Dropzone, FileList, Status } from '../components/ToolShell.jsx';
+import { downloadBlob } from '../api.js';
+import { mergePdfs } from '../pdfLocal.js';
+import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
 
 export default function MergePdf() {
   const [files, setFiles] = useState([]);
@@ -23,9 +24,8 @@ export default function MergePdf() {
     if (files.length < 2) { setError('Add at least 2 PDFs to merge.'); return; }
     setLoading(true); setError(''); setSuccess('');
     try {
-      const form = new FormData();
-      files.forEach((f) => form.append('files', f));
-      const name = await postDownload('/api/pdf/merge', form, 'merged.pdf');
+      const { blob, name } = await mergePdfs(files);
+      downloadBlob(blob, name);
       setSuccess(`Downloaded ${name}.`);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -35,6 +35,7 @@ export default function MergePdf() {
     <div className="tool-page">
       <h1>Merge PDF</h1>
       <p className="lede">Combine several PDFs into one, in the order you choose.</p>
+      <LocalBadge />
       <div className="panel">
         <Dropzone multiple onFiles={addFiles} label="Drop PDFs here, or click to browse" />
         <FileList files={files} onRemove={(i) => setFiles((p) => p.filter((_, x) => x !== i))} onMove={move} />

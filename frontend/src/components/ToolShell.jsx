@@ -63,6 +63,13 @@ export function FileList({ files, onRemove, onMove }) {
   );
 }
 
+/** Shown on tools that run entirely in the browser. */
+export function LocalBadge() {
+  return (
+    <p className="local-badge">🔒 Processed on your device — your files are never uploaded.</p>
+  );
+}
+
 /** Shared status line: loading spinner text, error box, or success message. */
 export function Status({ loading, error, success }) {
   if (loading) return <p aria-live="polite">Working on your PDF…</p>;
