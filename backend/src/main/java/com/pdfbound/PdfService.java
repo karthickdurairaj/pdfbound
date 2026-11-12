@@ -3,6 +3,8 @@ package com.pdfbound;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,6 +19,10 @@ import org.apache.pdfbox.multipdf.Splitter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.util.Matrix;
 
 /**
  * Pure PDFBox operations. Each method takes uploaded temp files and returns
@@ -148,6 +154,157 @@ public final class PdfService {
         return out.toByteArray();
       }
     }
+  }
+
+  /**
+   * Build a PDF with one image per page, in the given order.
+   *
+   * @param pageSize    "fit" (page matches each image), "a4" or "letter"
+   * @param orientation "auto" (follows each image), "portrait" or "landscape"; ignored for "fit"
+   * @param margin      "none", "small" or "large"
+   * JPEGs are embedded as-is (no re-encoding); phone photos are turned upright using
+   * their EXIF orientation. Images are never enlarged on A4/Letter pages, only shrunk to fit.
+   */
+  public static byte[] imagesToPdf(List<File> images, String pageSize, String orientation, String margin)
+      throws IOException {
+    String size = pageSize == null || pageSize.isBlank() ? "fit" : pageSize.trim().toLowerCase();
+    String orient = orientation == null || orientation.isBlank() ? "auto" : orientation.trim().toLowerCase();
+    float pad = switch (margin == null || margin.isBlank() ? "none" : margin.trim().toLowerCase()) {
+      case "none" -> 0f;
+      case "small" -> 20f;
+      case "large" -> 40f;
+      default -> throw new IllegalArgumentException("margin must be none, small or large.");
+    };
+    PDRectangle base = switch (size) {
+      case "fit" -> null;
+      case "a4" -> PDRectangle.A4;
+      case "letter" -> PDRectangle.LETTER;
+      default -> throw new IllegalArgumentException("pageSize must be fit, a4 or letter.");
+    };
+    if (!List.of("auto", "portrait", "landscape").contains(orient)) {
+      throw new IllegalArgumentException("orientation must be auto, portrait or landscape.");
+    }
+
+    try (PDDocument doc = new PDDocument();
+         ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      int index = 1;
+      for (File file : images) {
+        PDImageXObject img;
+        try {
+          img = PDImageXObject.createFromFileByContent(file, doc);
+        } catch (IOException | IllegalArgumentException e) {
+          throw new IllegalArgumentException("Image " + index + " could not be read. Use JPG, PNG, GIF, BMP or TIFF.");
+        }
+        int rotation = exifRotation(file);          // 0, 90, 180 or 270 (clockwise)
+        boolean sideways = rotation == 90 || rotation == 270;
+        float imgW = img.getWidth();
+        float imgH = img.getHeight();
+        float shownW = sideways ? imgH : imgW;       // size once turned upright
+        float shownH = sideways ? imgW : imgH;
+
+        PDRectangle pageBox;
+        float scale;
+        if (base == null) {
+          pageBox = new PDRectangle(shownW + 2 * pad, shownH + 2 * pad);
+          scale = 1f;
+        } else {
+          boolean landscape = orient.equals("landscape") || (orient.equals("auto") && shownW > shownH);
+          pageBox = landscape ? new PDRectangle(base.getHeight(), base.getWidth()) : base;
+          float boxW = pageBox.getWidth() - 2 * pad;
+          float boxH = pageBox.getHeight() - 2 * pad;
+          scale = Math.min(1f, Math.min(boxW / shownW, boxH / shownH));
+        }
+
+        PDPage page = new PDPage(pageBox);
+        doc.addPage(page);
+        float drawW = shownW * scale;
+        float drawH = shownH * scale;
+        float x0 = (pageBox.getWidth() - drawW) / 2f;
+        float y0 = (pageBox.getHeight() - drawH) / 2f;
+
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+          if (rotation == 0) {
+            cs.drawImage(img, x0, y0, drawW, drawH);
+          } else {
+            // Move to the right corner, then rotate, so the image lands upright in its box.
+            cs.saveGraphicsState();
+            switch (rotation) {
+              case 90 -> {
+                cs.transform(Matrix.getTranslateInstance(x0, y0 + drawH));
+                cs.transform(Matrix.getRotateInstance(-Math.PI / 2, 0, 0));
+              }
+              case 180 -> {
+                cs.transform(Matrix.getTranslateInstance(x0 + drawW, y0 + drawH));
+                cs.transform(Matrix.getRotateInstance(Math.PI, 0, 0));
+              }
+              default -> { // 270
+                cs.transform(Matrix.getTranslateInstance(x0 + drawW, y0));
+                cs.transform(Matrix.getRotateInstance(Math.PI / 2, 0, 0));
+              }
+            }
+            cs.drawImage(img, 0, 0, imgW * scale, imgH * scale);
+            cs.restoreGraphicsState();
+          }
+        }
+        index++;
+      }
+      doc.save(out);
+      return out.toByteArray();
+    }
+  }
+
+  /**
+   * Clockwise rotation needed to show a JPEG upright, from its EXIF Orientation tag.
+   * Returns 0 for non-JPEGs, missing EXIF, or anything unreadable.
+   * Mirrored orientations (2, 4, 5, 7) are treated as their nearest rotation.
+   */
+  static int exifRotation(File file) {
+    try (InputStream in = Files.newInputStream(file.toPath())) {
+      byte[] head = in.readNBytes(128 * 1024); // EXIF lives at the start of the file
+      if (head.length < 4 || (head[0] & 0xFF) != 0xFF || (head[1] & 0xFF) != 0xD8) return 0;
+      int pos = 2;
+      while (pos + 4 <= head.length && (head[pos] & 0xFF) == 0xFF) {
+        int marker = head[pos + 1] & 0xFF;
+        int segLen = ((head[pos + 2] & 0xFF) << 8) | (head[pos + 3] & 0xFF);
+        if (marker == 0xDA || segLen < 2) break;           // start of image data: no EXIF found
+        int body = pos + 4;
+        if (marker == 0xE1 && body + 14 <= head.length
+            && head[body] == 'E' && head[body + 1] == 'x' && head[body + 2] == 'i' && head[body + 3] == 'f') {
+          int tiff = body + 6;
+          boolean little = head[tiff] == 'I';
+          int ifd = tiff + readInt(head, tiff + 4, little);
+          if (ifd + 2 > head.length) return 0;
+          int count = readShort(head, ifd, little);
+          for (int i = 0; i < count; i++) {
+            int entry = ifd + 2 + i * 12;
+            if (entry + 12 > head.length) return 0;
+            if (readShort(head, entry, little) == 0x0112) {
+              return switch (readShort(head, entry + 8, little)) {
+                case 3, 4 -> 180;
+                case 5, 6 -> 90;
+                case 7, 8 -> 270;
+                default -> 0;
+              };
+            }
+          }
+          return 0;
+        }
+        pos += 2 + segLen;
+      }
+    } catch (IOException | RuntimeException e) {
+      // Bad or truncated EXIF: just don't rotate.
+    }
+    return 0;
+  }
+
+  private static int readShort(byte[] b, int at, boolean little) {
+    return little ? (b[at] & 0xFF) | ((b[at + 1] & 0xFF) << 8)
+                  : ((b[at] & 0xFF) << 8) | (b[at + 1] & 0xFF);
+  }
+
+  private static int readInt(byte[] b, int at, boolean little) {
+    return little ? (b[at] & 0xFF) | ((b[at + 1] & 0xFF) << 8) | ((b[at + 2] & 0xFF) << 16) | ((b[at + 3] & 0xFF) << 24)
+                  : ((b[at] & 0xFF) << 24) | ((b[at + 1] & 0xFF) << 16) | ((b[at + 2] & 0xFF) << 8) | (b[at + 3] & 0xFF);
   }
 
   // --- helpers -----------------------------------------------------------

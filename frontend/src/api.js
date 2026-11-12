@@ -13,6 +13,23 @@ export function validatePdf(file) {
   return null;
 }
 
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tif', '.tiff'];
+export const IMAGE_ACCEPT = 'image/jpeg,image/png,image/gif,image/bmp,image/tiff,' + IMAGE_EXTENSIONS.join(',');
+
+export function validateImage(file) {
+  if (!file) return 'Please choose an image.';
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.heic') || name.endsWith('.heif')) {
+    return `"${file.name}" is an iPhone HEIC photo. Export it as JPG first (or set Camera → Formats → Most Compatible).`;
+  }
+  if (name.endsWith('.webp')) return `"${file.name}" is WebP, which isn't supported yet. Use JPG or PNG.`;
+  if (!IMAGE_EXTENSIONS.some((ext) => name.endsWith(ext))) {
+    return `"${file.name}" is not a supported image. Use JPG, PNG, GIF, BMP or TIFF.`;
+  }
+  if (file.size > MAX_FILE_SIZE) return `"${file.name}" is over the 50 MB limit.`;
+  return null;
+}
+
 /** Parse an error body from the backend ({error: "..."}) or fall back to HTTP status. */
 async function readError(res) {
   try {

@@ -6,6 +6,7 @@ import { fetchTools } from '../api.js';
 // once the backend is up; this just keeps the home page useful offline).
 const FALLBACK_TOOLS = [
   { id: 'merge', name: 'Merge PDF', description: 'Combine several PDFs into one, in the order you choose.', path: '/merge', icon: '🔗' },
+  { id: 'images-to-pdf', name: 'Image to PDF', description: 'Turn JPG, PNG and other images into a PDF, one image per page.', path: '/images-to-pdf', icon: '🖼️' },
   { id: 'split', name: 'Split PDF', description: 'Split a PDF into ranges, or one file every N pages.', path: '/split', icon: '✂️' },
   { id: 'compress', name: 'Compress PDF', description: 'Make a PDF smaller by re-saving it with compression.', path: '/compress', icon: '🗜️' },
   { id: 'rotate', name: 'Rotate PDF', description: 'Rotate pages 90°, 180° or 270° — all pages or just some.', path: '/rotate', icon: '🔄' },
@@ -38,7 +39,7 @@ export default function Home() {
     <>
       <section className="hero">
         <h1>Every PDF tool you need, <span>in one place</span></h1>
-        <p>Merge, split, compress, rotate and more — free, fast, and your files are deleted after processing.</p>
+        <p>Merge, split, compress, convert images to PDF and more — free, fast, and your files are deleted after processing.</p>
         <input
           className="search"
           type="search"

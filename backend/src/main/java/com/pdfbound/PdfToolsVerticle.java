@@ -82,6 +82,17 @@ public class PdfToolsVerticle extends AbstractVerticle {
       } catch (Exception e) { handleError(ctx, e); }
     });
 
+    router.post("/api/pdf/from-images").blockingHandler(ctx -> {
+      try {
+        List<File> images = requireImages(ctx, "files");
+        byte[] pdf = PdfService.imagesToPdf(images,
+          ctx.request().getFormAttribute("pageSize"),
+          ctx.request().getFormAttribute("orientation"),
+          ctx.request().getFormAttribute("margin"));
+        sendPdf(ctx, pdf, "images.pdf");
+      } catch (Exception e) { handleError(ctx, e); }
+    });
+
     router.post("/api/pdf/split").blockingHandler(ctx -> {
       try {
         File file = requireSingleUpload(ctx, "file");
@@ -147,6 +158,7 @@ public class PdfToolsVerticle extends AbstractVerticle {
   private String toolsJson() {
     JsonArray tools = new JsonArray();
     tools.add(tool("merge", "Merge PDF", "Combine several PDFs into one.", "POST /api/pdf/merge"));
+    tools.add(tool("images-to-pdf", "Image to PDF", "Turn JPG, PNG and other images into a PDF.", "POST /api/pdf/from-images"));
     tools.add(tool("split", "Split PDF", "Split a PDF into ranges, or every N pages (ZIP).", "POST /api/pdf/split"));
     tools.add(tool("compress", "Compress PDF", "Re-save a PDF with compression.", "POST /api/pdf/compress"));
     tools.add(tool("rotate", "Rotate PDF", "Rotate pages 90, 180 or 270 degrees.", "POST /api/pdf/rotate"));
@@ -181,6 +193,56 @@ public class PdfToolsVerticle extends AbstractVerticle {
       throw new IllegalArgumentException("Upload at least " + min + " PDF files (field \"" + field + "\").");
     }
     return files;
+  }
+
+  private static final int MAX_IMAGES = 100;
+  private static final List<String> IMAGE_EXTENSIONS =
+    List.of(".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff");
+
+  /** Multiple multipart image uploads (JPG, PNG, GIF, BMP, TIFF), in upload order. */
+  private List<File> requireImages(RoutingContext ctx, String field) {
+    List<File> files = new ArrayList<>();
+    for (FileUpload u : ctx.fileUploads()) {
+      if (u.name().equals(field)) files.add(validateImage(u));
+    }
+    if (files.isEmpty()) throw new IllegalArgumentException("Upload at least 1 image (field \"" + field + "\").");
+    if (files.size() > MAX_IMAGES) throw new IllegalArgumentException("Upload at most " + MAX_IMAGES + " images at a time.");
+    return files;
+  }
+
+  private File validateImage(FileUpload upload) {
+    File file = new File(upload.uploadedFileName());
+    String original = upload.fileName() == null ? "" : upload.fileName();
+    String lower = original.toLowerCase();
+    String type = upload.contentType() == null ? "" : upload.contentType().toLowerCase();
+    if (!file.exists() || file.length() == 0) {
+      throw new IllegalArgumentException("\"" + original + "\" is empty.");
+    }
+    if (file.length() > 50L * 1024 * 1024) {
+      throw new IllegalArgumentException("\"" + original + "\" is over the 50 MB limit.");
+    }
+    boolean namedLikeImage = IMAGE_EXTENSIONS.stream().anyMatch(lower::endsWith) || type.startsWith("image/");
+    if (!namedLikeImage || !hasImageHeader(file)) {
+      throw new IllegalArgumentException("\"" + original + "\" is not a supported image. Use JPG, PNG, GIF, BMP or TIFF.");
+    }
+    return file;
+  }
+
+  /** True if the file starts with a JPEG, PNG, GIF, BMP or TIFF signature. */
+  private boolean hasImageHeader(File file) {
+    try (java.io.InputStream in = new java.io.FileInputStream(file)) {
+      byte[] h = in.readNBytes(4);
+      if (h.length < 4) return false;
+      int b0 = h[0] & 0xFF, b1 = h[1] & 0xFF, b2 = h[2] & 0xFF, b3 = h[3] & 0xFF;
+      return (b0 == 0xFF && b1 == 0xD8 && b2 == 0xFF)                     // JPEG
+        || (b0 == 0x89 && b1 == 'P' && b2 == 'N' && b3 == 'G')            // PNG
+        || (b0 == 'G' && b1 == 'I' && b2 == 'F' && b3 == '8')             // GIF
+        || (b0 == 'B' && b1 == 'M')                                        // BMP
+        || (b0 == 'I' && b1 == 'I' && b2 == 42 && b3 == 0)                 // TIFF, little-endian
+        || (b0 == 'M' && b1 == 'M' && b2 == 0 && b3 == 42);                // TIFF, big-endian
+    } catch (java.io.IOException e) {
+      return false;
+    }
   }
 
   /**
