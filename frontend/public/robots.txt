@@ -1,0 +1,7 @@
+# PDFBound — https://pdfbound.com
+User-agent: *
+Allow: /
+# API endpoints only process uploads; nothing there to index.
+Disallow: /api/
+
+Sitemap: https://pdfbound.com/sitemap.xml
