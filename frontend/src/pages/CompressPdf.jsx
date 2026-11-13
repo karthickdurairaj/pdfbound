@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { postDownload } from '../api.js';
 import { Dropzone, FileList, Status } from '../components/ToolShell.jsx';
+import { isValidPdf, receiveFiles } from '../handoff.js';
 
 export default function CompressPdf() {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(() => receiveFiles(isValidPdf, { single: true }));
   const [level, setLevel] = useState('medium');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

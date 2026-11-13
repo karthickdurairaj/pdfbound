@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { downloadBlob } from '../api.js';
 import { rotatePdf } from '../pdfLocal.js';
 import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
+import { isValidPdf, receiveFiles } from '../handoff.js';
 
 export default function RotatePdf() {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(() => receiveFiles(isValidPdf, { single: true }));
   const [pages, setPages] = useState('all');
   const [angle, setAngle] = useState('90');
   const [loading, setLoading] = useState(false);

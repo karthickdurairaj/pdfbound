@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { downloadBlob } from '../api.js';
 import { mergePdfs } from '../pdfLocal.js';
 import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
+import { isValidPdf, receiveFiles } from '../handoff.js';
 
 export default function MergePdf() {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(() => receiveFiles(isValidPdf));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -37,7 +38,7 @@ export default function MergePdf() {
       <p className="lede">Combine several PDFs into one, in the order you choose.</p>
       <LocalBadge />
       <div className="panel">
-        <Dropzone multiple onFiles={addFiles} label="Drop PDFs here, or click to browse" />
+        <Dropzone multiple onFiles={addFiles} />
         <FileList files={files} onRemove={(i) => setFiles((p) => p.filter((_, x) => x !== i))} onMove={move} />
         <div className="btn-row">
           <button className="btn" disabled={loading || files.length < 2} onClick={onMerge}>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { formatBytes, postJson } from '../api.js';
 import { Dropzone, FileList, Status } from '../components/ToolShell.jsx';
+import { isValidPdf, receiveFiles } from '../handoff.js';
 
 export default function PdfInfo() {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(() => receiveFiles(isValidPdf, { single: true }));
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

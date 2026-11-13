@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { downloadBlob } from '../api.js';
 import { splitPdf } from '../pdfLocal.js';
 import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
+import { isValidPdf, receiveFiles } from '../handoff.js';
 
 export default function SplitPdf() {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(() => receiveFiles(isValidPdf, { single: true }));
   const [mode, setMode] = useState('ranges');
   const [ranges, setRanges] = useState('1-3,4-6');
   const [every, setEvery] = useState('1');

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { downloadBlob } from '../api.js';
 import { deletePages } from '../pdfLocal.js';
 import { Dropzone, FileList, LocalBadge, Status } from '../components/ToolShell.jsx';
+import { isValidPdf, receiveFiles } from '../handoff.js';
 
 export default function DeletePages() {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState(() => receiveFiles(isValidPdf, { single: true }));
   const [pages, setPages] = useState('2');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

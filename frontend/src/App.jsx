@@ -12,6 +12,7 @@ import ImagesToPdf from './pages/ImagesToPdf.jsx';
 import ProtectPdf from './pages/ProtectPdf.jsx';
 import UnlockPdf from './pages/UnlockPdf.jsx';
 import Privacy from './pages/Privacy.jsx';
+import Icon from './components/Icon.jsx';
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,9 +26,10 @@ export default function App() {
 
   return (
     <>
+      <a href="#main" className="skip-link">Skip to content</a>
       <header className="site-header">
         <div className="container">
-          <Link to="/" className="logo">PDF<span>Bound</span></Link>
+          <Link to="/" className="logo" aria-label="PDFBound home">pdf<span>bound</span></Link>
           <button
             type="button"
             className="menu-toggle"
@@ -36,21 +38,20 @@ export default function App() {
             aria-controls="site-nav"
             onClick={() => setMenuOpen((o) => !o)}
           >
-            {menuOpen ? '✕' : '☰'}
+            <Icon name={menuOpen ? 'close' : 'menu'} />
           </button>
-          <nav id="site-nav" className={menuOpen ? 'open' : ''}>
+          <nav id="site-nav" className={menuOpen ? 'open' : ''} aria-label="Main">
             <NavLink to="/" end>All tools</NavLink>
             <NavLink to="/merge">Merge</NavLink>
             <NavLink to="/images-to-pdf">Image to PDF</NavLink>
-            <NavLink to="/split">Split</NavLink>
             <NavLink to="/compress">Compress</NavLink>
             <NavLink to="/protect">Protect</NavLink>
-            <NavLink to="/info">PDF Info</NavLink>
+            <NavLink to="/privacy">Privacy</NavLink>
           </nav>
         </div>
       </header>
 
-      <main className="container">
+      <main id="main" className="container">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/merge" element={<MergePdf />} />
@@ -70,9 +71,12 @@ export default function App() {
 
       <footer className="site-footer">
         <div className="container">
-          PDFBound — free PDF tools. Merge, Split, Rotate, Extract and Delete
-          Pages run entirely on your device. Other tools upload your file only to
-          process it, then delete it. No account, no files kept. · <Link to="/privacy">Privacy Policy</Link>
+          <p className="footer-brand"><span className="logo">pdf<span>bound</span></span> Free PDF tools. No account, no files kept.</p>
+          <nav className="footer-links" aria-label="Footer">
+            <Link to="/">All tools</Link>
+            <Link to="/privacy">Privacy Policy</Link>
+            <a href="https://github.com/karthickdurairaj/pdfbound" rel="noopener">GitHub</a>
+          </nav>
         </div>
       </footer>
     </>

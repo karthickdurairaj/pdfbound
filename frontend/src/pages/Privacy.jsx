@@ -137,7 +137,7 @@ export default function Privacy() {
           Questions about this policy? Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
         </p>
 
-        <p className="legal-back"><Link to="/">← Back to all tools</Link></p>
+        <p className="legal-back"><Link to="/">Back to all tools</Link></p>
       </div>
     </div>
   );

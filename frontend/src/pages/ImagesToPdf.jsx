@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { IMAGE_ACCEPT, formatBytes, postDownload, validateImage } from '../api.js';
 import { Dropzone, Status } from '../components/ToolShell.jsx';
+import Icon from '../components/Icon.jsx';
+import { isValidImage, receiveFiles } from '../handoff.js';
 
 // Each picked image gets a preview URL so the user can see and reorder pages.
 let nextId = 1;
 const withPreview = (file) => ({ id: nextId++, file, url: URL.createObjectURL(file) });
 
 export default function ImagesToPdf() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => receiveFiles(isValidImage).map(withPreview));
   const [pageSize, setPageSize] = useState('a4');
   const [orientation, setOrientation] = useState('auto');
   const [margin, setMargin] = useState('small');
@@ -59,9 +61,8 @@ export default function ImagesToPdf() {
           onFiles={addFiles}
           accept={IMAGE_ACCEPT}
           validate={validateImage}
-          icon="🖼️"
-          label="Drop images here, or click to browse"
-          hint="JPG, PNG, GIF, BMP or TIFF · max 50 MB per image"
+          label="Add images"
+          hint="JPG, PNG, GIF, BMP or TIFF · max 50 MB each"
         />
 
         {items.length > 0 && (
@@ -75,9 +76,9 @@ export default function ImagesToPdf() {
                   </div>
                   <div className="name" title={it.file.name}>{it.file.name}</div>
                   <div className="actions">
-                    <button type="button" className="btn secondary small" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move earlier">←</button>
-                    <button type="button" className="btn secondary small" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label="Move later">→</button>
-                    <button type="button" className="btn secondary small" onClick={() => remove(i)} aria-label="Remove">✕</button>
+                    <button type="button" className="icon-btn" disabled={i === 0} onClick={() => move(i, -1)} aria-label={`Move ${it.file.name} earlier`}><Icon name="left" size={16} /></button>
+                    <button type="button" className="icon-btn" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label={`Move ${it.file.name} later`}><Icon name="right" size={16} /></button>
+                    <button type="button" className="icon-btn" onClick={() => remove(i)} aria-label={`Remove ${it.file.name}`}><Icon name="close" size={16} /></button>
                   </div>
                 </li>
               ))}
